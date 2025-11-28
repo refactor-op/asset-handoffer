@@ -44,7 +44,7 @@ naming:
   # 正则表达式（用于解析文件名）
   # 必须包含命名组：module, category, feature
   # 可选命名组：variant, ext
-  pattern: "^(?P<module>\\w+)_(?P<category>\\w+)_(?P<feature>[\\w-]+)(_(?P<variant>\\w+))?\\.(?P<ext>\\w+)$"
+  pattern: "^(?P<module>[^_]+)_(?P<category>[^_]+)_(?P<feature>[^_]+)(_(?P<variant>[^_]+))?\\.(?P<ext>\\w+)$"
   
   # 示例（给美术看的）
   example: "GameCore_Character_Hero_Idle.fbx"

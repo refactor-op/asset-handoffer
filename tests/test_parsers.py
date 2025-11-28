@@ -11,7 +11,7 @@ class TestFilenameParser:
     
     @pytest.fixture
     def parser(self):
-        pattern = r"^(?P<module>\w+)_(?P<category>\w+)_(?P<feature>[\w-]+)(_(?P<variant>\w+))?\.(?P<ext>\w+)$"
+        pattern = r"^(?P<module>[^_]+)_(?P<category>[^_]+)_(?P<feature>[^_]+)(_(?P<variant>[^_]+))?\.(?P<ext>\w+)$"
         return FilenameParser(pattern)
 
     @pytest.mark.parametrize("filename,expected_module,expected_category,expected_feature", [

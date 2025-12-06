@@ -10,10 +10,23 @@ git:
   #   email: "asset-handoffer@local"
 
 asset_root: "Assets/GameRes/"
-path_template: "{type}/{name}/"
+
+# ==============================================================================
+# 方式 1: 保留原始文件名
+# 输入: Character_Hero_Run.fbx
+# 输出: Assets/GameRes/Character/Hero/Character_Hero_Run.fbx
+# ------------------------------------------------------------------------------
+# path_template: "{type}/{category}/"
+# ------------------------------------------------------------------------------
+# 方式 2: 重命名文件
+# 输入: Character_Hero_Run.fbx
+# 输出: Assets/GameRes/Character/Hero/Run.fbx
+# ------------------------------------------------------------------------------
+path_template: "{type}/{category}/{name}.{ext}"
+# ==============================================================================
 
 naming:
-  pattern: "^(?P<type>[^_]+)_(?P<name>[^_]+)\\.(?P<ext>\\w+)$"
-  example: "Character_Hero.fbx"
+  pattern: "^(?P<type>[^_]+)_(?P<category>[^_]+)_(?P<name>[^_]+)(_(?P<variant>[^.]+))?\\.(?P<ext>\\w+)$"
+  example: "Character_Hero_Run.fbx"
 
 language: "zh-CN"

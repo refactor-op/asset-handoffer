@@ -46,13 +46,35 @@ class GitRepo:
         
         url_with_token = self._inject_token(git_url)
         
+        env = os.environ.copy()
+        if self.token:
+            env['GIT_TERMINAL_PROMPT'] = '0'
+            env['GCM_INTERACTIVE'] = 'never'
+        
         try:
             subprocess.run(
-                ['git', 'clone', '-b', branch, '--single-branch', url_with_token, str(self.repo_path)],
+                ['git', 'clone', '-b', branch, '--single-branch', 
+                 '-c', 'credential.helper=', url_with_token, str(self.repo_path)],
                 check=True,
                 capture_output=True,
-                text=True
+                text=True,
+                env=env
             )
+            
+            if self.token:
+                subprocess.run(
+                    ['git', 'config', 'credential.helper', ''],
+                    cwd=str(self.repo_path),
+                    check=True,
+                    capture_output=True
+                )
+                
+                subprocess.run(
+                    ['git', 'remote', 'set-url', 'origin', url_with_token],
+                    cwd=str(self.repo_path),
+                    check=True,
+                    capture_output=True
+                )
         except subprocess.CalledProcessError as e:
             raise GitError(self.messages.t('git.clone_failed', error=e.stderr))
     

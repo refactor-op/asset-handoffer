@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Version](https://img.shields.io/badge/version-0.9.9-green.svg)](https://github.com/HeBtcd/asset-handoffer)
+[![Version](https://img.shields.io/badge/version-0.9.11-green.svg)](https://github.com/HeBtcd/asset-handoffer)
 
 ## 为什么需要这个工具？
 
@@ -53,16 +53,15 @@
 美术工作区/
 ├── config.yaml          # 配置文件（程序员提供）
 ├── inbox/               # 📥 美术看得到：拖文件进来
-│   └── Hero_Idle.fbx
+│   └── Character_Hero.fbx
 │
 └── .repo/               # 🔒 美术看不到：隐藏的Git仓库
     ├── .git/
     ├── Assets/
     │   └── GameRes/
-    │       └── GameCore/
-    │           └── Characters/
-    │               └── Hero/
-    │                   └── Hero_Idle.fbx  ← 自动放这里
+    │       └── Character/
+    │           └── Hero/
+    │               └── Character_Hero.fbx  ← 自动放这里
     └── ProjectSettings/
 ```
 
@@ -70,7 +69,7 @@
 1. 文件放入inbox
 2. 运行process命令
 3. 工具自动：
-   - 解析文件名（模块、类别、功能）
+   - 解析文件名（根据配置的正则表达式）
    - 移动到.repo对应位置
    - git add + commit + push
 4. 完成！
@@ -94,119 +93,49 @@ pip install asset-handoffer
 asset-handoffer init
 
 # 交互式输入：
-项目名称: MyGame
-# Asset Handoffer
-
-**美术资产交接自动化工具** - 让美术零门槛提交资产到远程仓库
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Version](https://img.shields.io/badge/version-0.9.9-green.svg)](https://github.com/HeBtcd/asset-handoffer)
-
-## 为什么需要这个工具？
-
-### 传统方式
-```
-美术创作完资产后：
-1. 需要学习Git命令
-2. 需要理解Unity项目结构
-3. 需要手动找到正确的目录
-4. 需要记住复杂的提交流程
-5. 遇到冲突不知道如何处理
-
-结果：美术求助程序员，程序员中断工作帮忙
-```
-
-### 使用本工具后
-```
-美术创作完资产后：
-1. 按规范命名文件
-2. 拖到inbox文件夹
-3. 运行一个命令
-
-完成！文件自动到正确位置并提交到远程仓库
-```
-
-## 核心理念
-
-**美术零决策，程序承担风险。**
-
-### 美术视角
-- 不需要学习Git
-- 不需要安装Unity
-- 不需要理解项目结构
-- 不需要处理任何冲突
-- 只需：命名→拖放→一个命令
-
-### 程序员视角
-- 一次配置，全员受益
-- 本地Git仓库，完整版本控制
-- 所有风险由程序员处理（pull后解决冲突）
-- 美术文件自动整理到正确位置
-
-## 工作原理
-
-```
-美术工作区/
-├── config.yaml          # 配置文件（程序员提供）
-├── inbox/               # 📥 美术看得到：拖文件进来
-│   └── Hero_Idle.fbx
-│
-└── .repo/               # 🔒 美术看不到：隐藏的Git仓库
-    ├── .git/
-    ├── Assets/
-    │   └── GameRes/
-    │       └── GameCore/
-    │           └── Characters/
-    │               └── Hero/
-    │                   └── Hero_Idle.fbx  ← 自动放这里
-    └── ProjectSettings/
-```
-
-**工作流程**：
-1. 文件放入inbox
-2. 运行process命令
-3. 工具自动：
-   - 解析文件名（模块、类别、功能）
-   - 移动到.repo对应位置
-   - git add + commit + push
-4. 完成！
-
-**关键**：
-- 美术只看到inbox
-- 本地.repo是完整的Unity项目Git仓库
-- 美术无感知Git的存在
-
-## 快速开始
-
-### 程序员：项目初始化（5分钟）
-
-#### 1. 安装工具
-```bash
-pip install asset-handoffer
-```
-
-#### 2. 生成配置文件
-```bash
-asset-handoffer init
-
-# 交互式输入：
-项目名称: MyGame
-远程仓库仓库URL: https://github.com/team/mygame.git
+远程仓库URL: https://github.com/team/mygame.git
 Unity资产根路径: Assets/GameRes/
 
 # 生成：mygame.yaml
 ```
 
-#### 3. 确保美术环境
-1. 安装 Python
-2. 安装 Git
-3. 确保 Git 凭据已配置（例如 Git Credential Manager）
+#### 3. 编辑配置（可选）
+根据项目需求自定义命名规则和路径模板。
 
 #### 4. 分发给美术
-```
-发送文件：
+将生成的 `config.yaml` 发给美术人员。
+
+### 美术：设置和使用（3分钟）
+
+#### 1. 安装工具
 ```bash
+pip install asset-handoffer
+```
+
+#### 2. 首次设置
+```bash
+asset-handoffer setup config.yaml
+```
+
+#### 3. 日常使用
+```bash
+# 1. 把文件拖到 inbox/ 目录
+# 2. 运行命令
+asset-handoffer process config.yaml
+```
+
+完成！
+
+## 命令参考
+
+### `init` - 生成配置文件（程序员）
+```bash
+asset-handoffer init [OPTIONS]
+
+# 选项：
+#   --output, -o FILE    输出文件路径
+
+# 示例：
 asset-handoffer init -o project-a.yaml
 ```
 
@@ -257,63 +186,95 @@ asset-handoffer status config.yaml
 
 ## 配置文件
 
-### 配置示例
+### 极简配置示例
 ```yaml
-# 项目信息
-project:
-  name: "我的游戏"
-  asset_root: "Assets/GameRes/"
+workspace: "./"
 
-# 工作区
+git:
+  repository: "https://github.com/team/game.git"
+  branch: "main"
+  commit_message: "Update {type}: {name}"
+
+asset_root: "Assets/GameRes/"
+path_template: "{type}/{name}/"
+
+naming:
+  pattern: "^(?P<type>[^_]+)_(?P<name>[^_]+)\\.(?P<ext>\\w+)$"
+  example: "Character_Hero.fbx"
+
+language: "zh-CN"
+```
+
+### 完整配置示例
+```yaml
+# 工作区（可自定义子目录）
 workspace:
-  base: "./"  # 配置文件所在目录
+  root: "./"
+  inbox: "inbox"
+  repo: ".repo"
+  failed: "failed"
+  logs: "logs"
 
 # Git配置
 git:
   repository: "https://github.com/team/game.git"
   branch: "main"
-  commit_template: "Update {category}: {feature}"
+  commit_message: "Update {type}: {name}"
 
-# 路径生成规则（统一）
-path_template: "{module}/{category}/{feature}/"
+# 资产根路径
+asset_root: "Assets/GameRes/"
 
-# 文件命名规则（正则表达式）
+# 路径模板（使用命名规则中的字段）
+path_template: "{type}/{name}/"
+
+# 文件命名规则（正则表达式，完全自定义）
 naming:
-  pattern: "^(?P<module>\\w+)_(?P<category>\\w+)_(?P<feature>[\\w-]+)(_(?P<variant>\\w+))?\\.(?P<ext>\\w+)$"
-  example: "GameCore_Character_Hero_Idle.fbx"
+  pattern: "^(?P<type>[^_]+)_(?P<name>[^_]+)\\.(?P<ext>\\w+)$"
+  example: "Character_Hero.fbx"
 
 # 语言
 language: "zh-CN"
 ```
 
+### 自定义命名规则示例
+
+#### 按日期和艺术家组织
+```yaml
+naming:
+  pattern: "^(?P<date>\\d{8})_(?P<artist>\\w+)_(?P<asset>.+)\\.(?P<ext>\\w+)$"
+  example: "20250106_John_TreeModel.fbx"
+
+path_template: "{date}/{artist}/{asset}/"
+
+git:
+  commit_message: "[{date}] {artist}: Add {asset}"
+```
+
+#### 按版本号组织
+```yaml
+naming:
+  pattern: "^(?P<name>[^_]+)_v(?P<version>\\d+)\\.(?P<ext>\\w+)$"
+  example: "HeroModel_v2.fbx"
+
+path_template: "Assets/{name}/v{version}/"
+```
+
 ### 配置说明
 
-#### `project.asset_root`
-Unity资产根路径，通常是`Assets/GameRes/`。
+#### `workspace`
+工作区配置。可以是字符串（简写）或字典（完整配置）。
+
+#### `asset_root`
+Unity资产根路径，通常是 `Assets/GameRes/`。
 
 #### `path_template`
-路径生成模板。变量：
-- `{module}` - 模块名
-- `{category}` - 类别
-- `{feature}` - 功能名
-- `{asset_root}` - 资产根路径
-
-示例：`{module}/{category}/{feature}/`  
-生成：`GameCore/Character/Hero/`
+路径生成模板。可以使用命名规则中定义的任意命名组。
 
 #### `naming.pattern`
-正则表达式，必须包含命名组：
-- `module` - 必需
-- `category` - 必需  
-- `feature` - 必需
-- `variant` - 可选
-- `ext` - 必需
+正则表达式，定义文件命名规则。**必须包含 `ext` 或 `extension` 命名组**。其他命名组完全自定义。
 
-#### `git.commit_template`
-提交消息模板。变量：
-- `{module}` - 模块名
-- `{category}` - 类别
-- `{feature}` - 功能名
+#### `git.commit_message`
+提交消息模板。可以使用命名规则中定义的任意命名组。
 
 ## 常见问题
 
@@ -334,6 +295,9 @@ Unity资产根路径，通常是`Assets/GameRes/`。
 
 ### Q: 如何撤销美术的提交？
 **A**: 程序员使用Git回滚，或使用`asset-handoffer delete`命令。
+
+### Q: 命名规则可以自定义吗？
+**A**: 完全可以！0.9.11版本支持完全自定义的命名规则，不再限制字段名。
 
 ## 贡献
 

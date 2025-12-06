@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "asset-handoffer"
-version = "0.9.10"
+version = "0.9.11"
 description = "美术资产交接自动化工具"
 readme = "README.md"
 license = "MIT"

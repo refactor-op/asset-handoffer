@@ -8,6 +8,88 @@ init.next.inbox: "  3. Put files into inbox: {path}"
 init.next.process: "  4. Run: asset-handoffer process"
 template.missing: "Template not found, using default"
 config.not_found: "Config not found: {path}"
+
+# Config errors (new)
+config.missing_field: "Missing required field: {field}"
+config.invalid_yaml: "Invalid YAML format: {error}"
+config.file_not_found: "Config file not found: {path}"
+
+# Git errors (new)
+git.repo_exists: "Repository already exists: {path}"
+git.clone_failed: "Clone failed: {error}"
+git.pull_failed_new: "Pull failed: {error}"
+git.add_failed: "Add failed: {error}"
+git.commit_failed: "Commit failed: {error}"
+git.push_failed_new: "Push failed: {error}"
+git.file_not_in_repo: "File not in repository: {path}"
+
+# Parse errors (new)
+parse.invalid_pattern: "Invalid regex pattern: {error}"
+parse.missing_ext_group: "Pattern must contain 'ext' or 'extension' named group"
+parse.filename_not_match: "Filename doesn't match pattern: {filename}"
+
+# Process errors (new)
+process.repo_not_exists: "Local repository doesn't exist. Run setup first"
+process.filename_error: "Filename format error: {error}\nCorrect format: {example}"
+process.template_undefined_field: "path_template uses undefined field: {field}\nAvailable fields: {available}"
+process.git_failed_moved_back: "Git operation failed, file moved back to inbox: {error}"
+process.git_failed: "Git operation failed: {error}"
+process.file_recovery_failed: "Cannot recover file: {error}"
+process.unknown_error: "Unknown error: {error}"
+process.move_to_failed: "File moved to failed directory: {path}"
+process.move_to_failed_error: "Cannot move to failed directory: {error}"
+
+# Success messages (new)
+process.success: "Success: {filename}"
+process.target: "   Target: {path}"
+
+# Setup command (new)
+setup.title: "Asset Handoffer - Workspace Setup"
+setup.repository: "Repository: {url}"
+setup.workspace: "Workspace: {path}"
+setup.inbox_dir: "Inbox: {path}"
+setup.repo_exists_warning: "Local repository already exists: {path}"
+setup.repo_exists_confirm: "Re-clone?"
+setup.skip_clone: "Skip clone"
+setup.cloning: "Cloning repository..."
+setup.cloned: "Repository cloned to: {path}"
+setup.done_title: "Setup complete"
+setup.usage_hint: "Usage:"
+setup.usage_put_files: "  1. Put files into: {inbox}"
+setup.usage_run_process: "  2. Run: asset-handoffer process {config}"
+
+# Process command (new)
+process.found_files: "Found {count} files"
+process.processing: "[{current}/{total}] Processing: {filename}"
+process.result_all_success: "  All successful"
+process.result_partial_failure: "  Partial failure"
+process.summary_success: "Success: {success}"
+process.summary_failed: "Failed: {failed}"
+process.failed_files_hint: "Failed files moved to: {path}"
+
+# Status command (new)
+status.empty: "Inbox is empty"
+status.count: "Pending files ({count}):"
+status.file_item: "  {name} ({size:.2f} MB)"
+status.run_hint: "Run: asset-handoffer process {config}"
+
+# Delete command (new)
+delete.not_found: "No files matching pattern: {pattern}"
+delete.found: "Found {count} files:"
+delete.file_item: "  {path}"
+delete.confirm: "Confirm deletion?"
+delete.cancelled: "Cancelled"
+delete.deleted: "Deleted {count} files"
+delete.failed: "Deletion failed: {error}"
+
+# Init command (new)
+init.created: "Config file created: {path}"
+init.next_steps: "\nNext steps:"
+init.next_git_credential: "1. Ensure Git credentials are configured (SSH or Credential Manager)"
+init.next_distribute: "2. Distribute config file to artists"
+init.next_setup: "3. Artists run: asset-handoffer setup {config}"
+init.failed: "Config creation failed: {error}"
+
 please.run.init: "Run: asset-handoffer init first"
 init.overwrite_confirm: "Config exists, overwrite?"
 git.write_root_failed: "Failed to write git.root: {error}"

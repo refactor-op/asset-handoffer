@@ -5,62 +5,54 @@ import yaml
 from typing import Any
 
 from ..exceptions import ConfigError
+from ..i18n import Messages
 
 
 class Config:
-    """配置管理
+    """配置管理"""
     
-    特性：
-    - 无签名验证（简化）
-    - 自动解析路径
-    - 基础完整性检查
-    """
-    
-    def __init__(self, config_dict: dict, config_file: Path):
+    def __init__(self, config_dict: dict, config_file: Path, messages: Messages = None):
         self.data = config_dict
         self.config_file = config_file
+        self.messages = messages or Messages(config_dict.get('language', 'zh-CN'))
         self._resolve_paths()
-        self._validate_basic()
+        self._validate()
     
     def _resolve_paths(self):
-        """解析和创建工作区路径"""
         workspace = self.data.get('workspace', {})
-        base = workspace.get('base', './')
         
-        # 相对路径 → 绝对路径（相对配置文件）
-        if not Path(base).is_absolute():
-            base = (self.config_file.parent / base).resolve()
+        if isinstance(workspace, str):
+            root = workspace
+            inbox_name = 'inbox'
+            repo_name = '.repo'
+            failed_name = 'failed'
+            logs_name = 'logs'
         else:
-            base = Path(base)
+            root = workspace.get('root', './')
+            inbox_name = workspace.get('inbox', 'inbox')
+            repo_name = workspace.get('repo', '.repo')
+            failed_name = workspace.get('failed', 'failed')
+            logs_name = workspace.get('logs', 'logs')
         
-        # 解析各个路径
-        self.workspace_base = base
-        self.inbox = base / "inbox"
-        self.repo = base / ".repo"  # 隐藏的Git仓库
-        self.failed = base / "failed"  # 失败文件
-        self.logs = base / "logs"  # 日志
+        if not Path(root).is_absolute():
+            root = (self.config_file.parent / root).resolve()
+        else:
+            root = Path(root)
+        
+        self.workspace_root = root
+        self.inbox = root / inbox_name
+        self.repo = root / repo_name
+        self.failed = root / failed_name
+        self.logs = root / logs_name
     
-    def _validate_basic(self):
-        """基础验证（必需字段）"""
-        required_fields = {
-            'project.name': '项目名称',
-            'git.repository': 'Git仓库地址',
-            'path_template': '路径模板',
-            'naming.pattern': '命名规则'
-        }
+    def _validate(self):
+        required = ['git.repository', 'naming.pattern', 'path_template', 'asset_root']
         
-        for field, desc in required_fields.items():
+        for field in required:
             if not self._get_nested(field):
-                raise ConfigError(f"配置缺少必需字段：{desc} ({field})")
-        
-        # 验证Git URL格式
-        git_url = self.git_url
-        if not (git_url.startswith('https://github.com') or 
-                git_url.startswith('https://gitee.com')):
-            raise ConfigError(f"不支持的Git仓库地址：{git_url}")
+                raise ConfigError(self.messages.t('config.missing_field', field=field))
     
     def _get_nested(self, key_path: str) -> Any:
-        """获取嵌套字段值"""
         keys = key_path.split('.')
         value = self.data
         
@@ -73,10 +65,6 @@ class Config:
         return value
     
     @property
-    def project_name(self) -> str:
-        return self.data['project']['name']
-    
-    @property
     def git_url(self) -> str:
         return self.data['git']['repository']
     
@@ -86,16 +74,15 @@ class Config:
     
     @property
     def git_commit_template(self) -> str:
-        return self.data.get('git', {}).get('commit_template', 
-                                           'Update {category}: {feature}')
+        return self.data.get('git', {}).get('commit_message', 'Update: {name}')
+    
+    @property
+    def asset_root(self) -> str:
+        return self.data.get('asset_root', 'Assets/GameRes/')
     
     @property
     def path_template(self) -> str:
         return self.data['path_template']
-    
-    @property
-    def asset_root(self) -> str:
-        return self.data['project'].get('asset_root', 'Assets/GameRes/')
     
     @property
     def naming_pattern(self) -> str:
@@ -110,34 +97,32 @@ class Config:
         return self.data.get('language', 'zh-CN')
     
     def ensure_dirs(self):
-        """确保所有必需目录存在"""
-        dirs = [self.inbox, self.failed, self.logs]
-        for d in dirs:
+        for d in [self.inbox, self.failed, self.logs]:
             d.mkdir(parents=True, exist_ok=True)
     
     @staticmethod
     def load(config_file: Path) -> 'Config':
-        """加载配置文件"""
+        temp_messages = Messages('zh-CN')
+        
         if not config_file.exists():
-            raise ConfigError(f"配置文件不存在：{config_file}")
+            raise ConfigError(temp_messages.t('config.file_not_found', path=str(config_file)))
         
         try:
             data = yaml.safe_load(config_file.read_text(encoding='utf-8'))
         except yaml.YAMLError as e:
-            raise ConfigError(f"配置文件格式错误：{e}")
+            raise ConfigError(temp_messages.t('config.invalid_yaml', error=str(e)))
         
-        return Config(data, config_file)
+        messages = Messages(data.get('language', 'zh-CN'))
+        return Config(data, config_file, messages)
     
     @staticmethod
     def create(
-        project_name: str,
         git_url: str,
         asset_root: str = "Assets/GameRes/",
         output_file: Path = None
     ) -> Path:
-        """创建新配置文件（程序员使用）"""
+        from pathlib import Path
         
-        # 读取模板文件
         template_path = Path(__file__).parent.parent / "templates" / "config.yaml"
         
         if not template_path.exists():
@@ -146,11 +131,7 @@ class Config:
         with open(template_path, 'r', encoding='utf-8') as f:
             template_content = f.read()
         
-        # 替换占位符（保留注释和格式）
         content = template_content.replace(
-            'name: "示例游戏项目"',
-            f'name: "{project_name}"'
-        ).replace(
             'asset_root: "Assets/GameRes/"',
             f'asset_root: "{asset_root}"'
         ).replace(
@@ -158,12 +139,10 @@ class Config:
             f'repository: "{git_url}"'
         )
         
-        # 输出文件
         if output_file is None:
-            safe_name = project_name.lower().replace(' ', '-').replace('_', '-')
-            output_file = Path(f"{safe_name}.yaml")
+            project_name = git_url.rstrip('/').split('/')[-1].replace('.git', '')
+            output_file = Path(f"{project_name}.yaml")
         
-        # 保存（直接写入，保留注释）
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(content)
         

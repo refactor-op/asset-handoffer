@@ -1,328 +1,146 @@
 # Asset Handoffer
 
-**美术资产交接自动化工具** - 让美术零门槛提交资产到远程仓库
+**美术资产交接自动化工具** - 让美术人员无需直接操作 Git 即可将资产提交到远程仓库。
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Version](https://img.shields.io/badge/version-0.9.19-green.svg)](https://github.com/HeBtcd/asset-handoffer)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](pyproject.toml)
+[![Version](https://img.shields.io/badge/version-0.9.19-green.svg)](pyproject.toml)
 
-## 为什么需要这个工具？
+---
 
-### 传统方式
-```
-美术创作完资产后：
-1. 需要学习Git命令
-2. 需要理解Unity项目结构
-3. 需要手动找到正确的目录
-4. 需要记住复杂的提交流程
-5. 遇到冲突不知道如何处理
+## 项目背景
 
-结果：美术求助程序员，程序员中断工作帮忙
-```
+在游戏开发过程中，美术资产的提交往往面临以下挑战：
 
-### 使用本工具后
-```
-美术创作完资产后：
-1. 按规范命名文件
-2. 拖到inbox文件夹
-3. 运行一个命令
+| 传统方式 | 使用 Asset Handoffer |
+| :--- | :--- |
+| **学习成本**：美术人员需要学习 Git 命令或复杂的 GUI 工具 | **简化操作**：仅需拖放文件并运行单一命令 |
+| **容易出错**：需要手动在复杂的 Unity 目录结构中定位 | **自动分发**：根据文件名正则表达式自动分发到正确目录 |
+| **风险不可控**：容易发生误覆盖或合并冲突 | **风险隔离**：始终进行增量提交，冲突由程序统一处理 |
+| **效率低下**：频繁中断程序员工作以协助解决环境问题 | **流程解耦**：美术专注创作，程序专注架构维护 |
 
-完成！文件自动到正确位置并提交到远程仓库
-```
-
-## 核心理念
-
-**美术零决策，程序承担风险。**
-
-### 美术视角
-- 不需要学习Git
-- 不需要安装Unity
-- 不需要理解项目结构
-- 不需要处理任何冲突
-- 只需：命名→拖放→一个命令
-
-### 程序员视角
-- 一次配置，全员受益
-- 本地Git仓库，完整版本控制
-- 所有风险由程序员处理（pull后解决冲突）
-- 美术文件自动整理到正确位置
+**理念**：将资产提交过程中的决策权移交给自动化脚本，由配置规则定义文件流向。
 
 ## 工作原理
 
-```
-美术工作区/
-├── config.yaml          # 配置文件（程序员提供）
-├── inbox/               # 📥 美术看得到：拖文件进来
-│   └── Character_Hero.fbx
-│
-└── .repo/               # 🔒 美术看不到：隐藏的Git仓库
-    ├── .git/
-    ├── Assets/
-    │   └── GameRes/
-    │       └── Character/
-    │           └── Hero/
-    │               └── Character_Hero.fbx  ← 自动放这里
-    └── ProjectSettings/
+```mermaid
+graph TD
+    User[美术人员] -->|1. 放入文件| Inbox(inbox 文件夹)
+    Inbox -->|2. 运行命令| Tool{Asset Handoffer}
+    Tool -->|3. 解析与移动| Repo(隐藏的 .repo 仓库)
+    Repo -->|4. 自动推送| Cloud[远程 Git 仓库]
 ```
 
-**工作流程**：
-1. 文件放入inbox
-2. 运行process命令
-3. 工具自动：
-   - 解析文件名（根据配置的正则表达式）
-   - 移动到.repo对应位置
-   - git add + commit + push
-4. 完成！
+**处理流程**：
+1. **Inbox**: 放置待提交文件（如 `Character_Hero.fbx`）到 `inbox/` 目录。
+2. **Process**: 工具根据预设正则（如 `^(?P<type>\w+)_(?P<name>\w+)\.fbx`）解析文件名元数据。
+3. **Move**: 将文件移动到映射路径（如 `.repo/Assets/GameRes/Character/Hero/Character_Hero.fbx`）。
+4. **Push**: 执行 Git 提交并推送到远程分支。
 
-**关键**：
-- 美术只看到inbox
-- 本地.repo是完整的Unity项目Git仓库
-- 美术无感知Git的存在
+## 安装
+
+确保系统已安装 [Python 3.10+](https://www.python.org/)。
+
+```bash
+pip install asset-handoffer
+```
 
 ## 快速开始
 
-### 程序员：项目初始化（5分钟）
+### 配置
 
-#### 1. 安装工具
-```bash
-pip install asset-handoffer
-```
+作为程序，需要初始化项目配置并分发给美术。
 
-#### 2. 生成配置文件
-```bash
-asset-handoffer init
+1.  **初始化配置**
+    ```bash
+    mkdir my_asset_tool
+    cd my_asset_tool
+    asset-handoffer init
+    ```
+    *根据提示输入 Git 仓库 URL 和 Unity 资产根路径。*
 
-# 交互式输入：
-远程仓库URL: https://github.com/team/mygame.git
-Unity资产根路径: Assets/GameRes/
+2.  **配置 GitHub Token (推荐)**
+    建议在生成的 YAML 配置文件中设置 `token`，以免去美术人员配置本地 Git 凭据的步骤。
+    > 建议申请 GitHub Fine-grained Token，权限仅需 `Contents: Read and write`。
 
-# 生成：mygame.yaml
-```
+3.  **分发配置文件**
+    将生成的 `config.yaml` 分发给美术团队。
 
-#### 3. 编辑配置（可选）
-根据项目需求自定义命名规则和路径模板。
+### 使用
 
-#### 4. 配置 GitHub Token（推荐）
+1.  **初始化工作区 (首次运行)**
+    ```bash
+    asset-handoffer setup config.yaml
+    ```
+    *此命令将初始化环境并创建 `inbox` 目录。*
 
-**为美术提供零门槛访问：**
+2.  **提交资产**
+    1. 将符合命名规范的文件（如 `Character_Hero.fbx`）放入 `inbox` 文件夹。
+    2. 运行处理命令：
+       ```bash
+       asset-handoffer process config.yaml
+       ```
 
-美术人员无需注册 GitHub 账号，程序员创建 Fine-grained Token 即可：
+## 配置说明
 
-1. GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens
-2. 创建新 token，权限设置：
-   - Repository access: 选择你的项目仓库
-   - Permissions: `Contents: Read and write`
-3. 将 token 添加到配置：
+配置文件采用 YAML 格式，主要定义**命名规则**与**路径模板**的映射关系。
+
+### 基础配置
 
 ```yaml
+# 1. 命名解析规则 (基于 Python 正则表达式)
+naming:
+  # 使用 (?P<name>...) 语法定义捕获组
+  pattern: "^(?P<type>[^_]+)_(?P<name>[^_]+)\\.(?P<ext>\\w+)$" 
+  example: "Character_Hero.fbx"
+
+# 2. 路径映射模板 (使用 {name} 引用捕获组)
+path_template: "Assets/GameRes/{type}/{name}/"
+asset_root: "Assets/GameRes/"
+
+# 3. Git 仓库配置
 git:
-  repository: "https://github.com/team/mygame.git"
-  token: "github_pat_xxxxxxxxxxxx"  # 美术专用token
+  repository: "https://github.com/team/game.git"
+  commit_message: "Update {type}: {name}"
 ```
 
-**优势：**
-- ✅ 美术无需GitHub账号
-- ✅ 可随时撤销，不影响程序员账号
-- ✅ 精细权限控制
-- ✅ 零弹窗，自动认证
+### 高级示例：按日期归档
 
-#### 5. 分发给美术
-将生成的 `config.yaml` 发给美术人员。
+支持任意复杂的正则组合。例如，按日期和作者归档：
 
-### 美术：设置和使用（3分钟）
+```yaml
+naming:
+  pattern: "^(?P<date>\\d{8})_(?P<artist>\\w+)_(?P<desc>.+)\\.png$"
+  example: "20231201_John_Sketch.png"
 
-#### 1. 安装工具
-```bash
-pip install asset-handoffer
+path_template: "Art/Sketches/{date}/{artist}/"
 ```
-
-#### 2. 首次设置
-```bash
-asset-handoffer setup config.yaml
-```
-
-#### 3. 日常使用
-```bash
-# 1. 把文件拖到 inbox/ 目录
-# 2. 运行命令
-asset-handoffer process config.yaml
-```
-
-完成！
 
 ## 命令参考
 
-### `init` - 生成配置文件（程序员）
-```bash
-asset-handoffer init [OPTIONS]
-
-# 选项：
-#   --output, -o FILE    输出文件路径
-
-# 示例：
-asset-handoffer init -o project-a.yaml
-```
-
-### `setup` - 设置工作区（美术）
-```bash
-asset-handoffer setup CONFIG_FILE
-
-# 首次使用时运行
-# 会：创建工作区、克隆Git仓库
-
-# 示例：
-asset-handoffer setup mygame.yaml
-```
-
-### `process` - 处理文件（美术）
-```bash
-asset-handoffer process CONFIG_FILE [OPTIONS]
-
-# 选项：
-#   --file, -f FILE    指定文件（可多次）
-
-# 示例：
-asset-handoffer process config.yaml              # 处理全部inbox
-asset-handoffer process config.yaml -f a.fbx     # 只处理a.fbx
-asset-handoffer process config.yaml -f a.fbx -f b.png  # 处理多个
-```
-
-### `delete` - 删除文件
-```bash
-asset-handoffer delete PATTERN CONFIG_FILE
-
-# 删除本地仓库中的文件并推送
-
-# 示例：
-asset-handoffer delete "Hero*.fbx" config.yaml
-asset-handoffer delete "OldAssets/*" config.yaml
-```
-
-### `status` - 查看状态
-```bash
-asset-handoffer status CONFIG_FILE
-
-# 显示inbox中待处理的文件
-
-# 示例：
-asset-handoffer status config.yaml
-```
-
-## 配置文件
-
-### 极简配置示例
-```yaml
-workspace: "./"
-
-git:
-  repository: "https://github.com/team/game.git"
-  branch: "main"
-  commit_message: "Update {type}: {name}"
-
-asset_root: "Assets/GameRes/"
-path_template: "{type}/{name}/"
-
-naming:
-  pattern: "^(?P<type>[^_]+)_(?P<name>[^_]+)\\.(?P<ext>\\w+)$"
-  example: "Character_Hero.fbx"
-
-language: "zh-CN"
-```
-
-### 完整配置示例
-```yaml
-# 工作区（可自定义子目录）
-workspace:
-  root: "./"
-  inbox: "inbox"
-  repo: ".repo"
-  failed: "failed"
-  logs: "logs"
-
-# Git配置
-git:
-  repository: "https://github.com/team/game.git"
-  branch: "main"
-  commit_message: "Update {type}: {name}"
-
-# 资产根路径
-asset_root: "Assets/GameRes/"
-
-# 路径模板（使用命名规则中的字段）
-path_template: "{type}/{name}/"
-
-# 文件命名规则（正则表达式，完全自定义）
-naming:
-  pattern: "^(?P<type>[^_]+)_(?P<name>[^_]+)\\.(?P<ext>\\w+)$"
-  example: "Character_Hero.fbx"
-
-# 语言
-language: "zh-CN"
-```
-
-### 自定义命名规则示例
-
-#### 按日期和艺术家组织
-```yaml
-naming:
-  pattern: "^(?P<date>\\d{8})_(?P<artist>\\w+)_(?P<asset>.+)\\.(?P<ext>\\w+)$"
-  example: "20250106_John_TreeModel.fbx"
-
-path_template: "{date}/{artist}/{asset}/"
-
-git:
-  commit_message: "[{date}] {artist}: Add {asset}"
-```
-
-#### 按版本号组织
-```yaml
-naming:
-  pattern: "^(?P<name>[^_]+)_v(?P<version>\\d+)\\.(?P<ext>\\w+)$"
-  example: "HeroModel_v2.fbx"
-
-path_template: "Assets/{name}/v{version}/"
-```
-
-### 配置说明
-
-#### `workspace`
-工作区配置。可以是字符串（简写）或字典（完整配置）。
-
-#### `asset_root`
-Unity资产根路径，通常是 `Assets/GameRes/`。
-
-#### `path_template`
-路径生成模板。可以使用命名规则中定义的任意命名组。
-
-#### `naming.pattern`
-正则表达式，定义文件命名规则。**必须包含 `ext` 或 `extension` 命名组**。其他命名组完全自定义。
-
-#### `git.commit_message`
-提交消息模板。可以使用命名规则中定义的任意命名组。
+| 命令 | 说明 | 示例 |
+| :--- | :--- | :--- |
+| `init` | 生成初始配置文件 (初始化用) | `asset-handoffer init -o config.yaml` |
+| `setup` | 初始化本地工作区 (客户端用) | `asset-handoffer setup config.yaml` |
+| `process` | 处理并提交文件 | `asset-handoffer process config.yaml` |
+| `status` | 查看待处理文件列表 | `asset-handoffer status config.yaml` |
+| `delete` | 删除仓库中的文件 | `asset-handoffer delete "Hero_*.fbx" config.yaml` |
 
 ## 常见问题
 
-### Q: 美术需要安装Unity吗？
-**A**: 不需要。美术电脑上只需要Python和这个工具。
+**Q: 使用此工具是否需要安装 Unity？**
+A: 不需要。工具仅处理文件系统层面的移动和 Git 提交，不依赖 Unity Editor。
 
-### Q: 美术需要学Git吗？
-**A**: 不需要。工具会自动处理所有Git操作。
+**Q: 如何处理文件冲突？**
+A: 工具在提交前会自动执行 `git pull` 同步远程变动。如果遇到无法自动合并的冲突（如多人修改同一二进制文件），流程会中断并报错。此时需程序员介入 `.repo` 目录手动解决。
 
-### Q: 文件冲突怎么办？
-**A**: 自动覆盖。程序员pull后看到冲突再处理。美术不需要关心。
-
-### Q: 支持大文件吗？
-**A**: 支持。使用真实的Git，可以配合Git LFS处理大文件。
-
-### Q: 认证失败怎么办？
-**A**: 请确保电脑上已配置 Git 凭据（SSH Key 或 Git Credential Manager）。可以在命令行尝试手动 git clone 仓库来验证。
-
-### Q: 如何撤销美术的提交？
-**A**: 程序员使用Git回滚，或使用`asset-handoffer delete`命令。
-
-### Q: 命名规则可以自定义吗？
-**A**: 完全可以！0.9.19版本支持完全自定义的命名规则，不再限制字段名。
+**Q: 命名不符合规范会怎样？**
+A: `process` 命令会跳过不符合正则规则的文件，并输出错误提示。这些文件将保留在 `inbox` 中。
 
 ## 贡献
 
-欢迎 Issue & PR!
+欢迎 Issue & Pull Request。
+
+## License
+
+MIT License

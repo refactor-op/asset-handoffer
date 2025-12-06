@@ -46,11 +46,17 @@ class Config:
         self.logs = root / logs_name
     
     def _validate(self):
-        required = ['git.repository', 'naming.pattern', 'path_template', 'asset_root']
+        required = ['git.repository', 'naming.pattern']
         
         for field in required:
             if not self._get_nested(field):
                 raise ConfigError(self.messages.t('config.missing_field', field=field))
+        
+        if 'asset_root' not in self.data:
+            raise ConfigError(self.messages.t('config.missing_field', field='asset_root'))
+        
+        if 'path_template' not in self.data:
+            raise ConfigError(self.messages.t('config.missing_field', field='path_template'))
     
     def _get_nested(self, key_path: str) -> Any:
         keys = key_path.split('.')

@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Version](https://img.shields.io/badge/version-0.9.11-green.svg)](https://github.com/HeBtcd/asset-handoffer)
+[![Version](https://img.shields.io/badge/version-0.9.12-green.svg)](https://github.com/HeBtcd/asset-handoffer)
 
 ## 为什么需要这个工具？
 
@@ -297,7 +297,7 @@ Unity资产根路径，通常是 `Assets/GameRes/`。
 **A**: 程序员使用Git回滚，或使用`asset-handoffer delete`命令。
 
 ### Q: 命名规则可以自定义吗？
-**A**: 完全可以！0.9.11版本支持完全自定义的命名规则，不再限制字段名。
+**A**: 完全可以！0.9.12版本支持完全自定义的命名规则，不再限制字段名。
 
 ## 贡献
 

@@ -10,7 +10,7 @@
 
 """
 
-__version__ = "0.9.16"
+__version__ = "0.9.17"
 __author__ = "Refactor"
 __email__ = "refactor.op@gmail.com"
 

@@ -5,6 +5,9 @@ git:
   branch: "main"
   commit_message: "Update {type}: {name}"
   # token: ""  # Optional: GitHub Personal Access Token (or use GITHUB_TOKEN env var)
+  # user:
+  #   name: "Asset Handoffer"
+  #   email: "asset-handoffer@local"
 
 asset_root: "Assets/GameRes/"
 path_template: "{type}/{name}/"

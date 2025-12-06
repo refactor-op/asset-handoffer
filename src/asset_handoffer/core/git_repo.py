@@ -39,7 +39,9 @@ class GitRepo:
             parsed.fragment
         ))
     
-    def clone(self, git_url: str, branch: str = "main"):
+    def clone(self, git_url: str, branch: str = "main", 
+              user_name: str = "Asset Handoffer", 
+              user_email: str = "asset-handoffer@local"):
         if self.exists():
             raise GitError(self.messages.t('git.repo_exists', path=self.repo_path))
         
@@ -74,6 +76,20 @@ class GitRepo:
                     check=True,
                     capture_output=True
                 )
+            
+            subprocess.run(
+                ['git', 'config', 'user.name', user_name],
+                cwd=str(self.repo_path),
+                check=False,
+                capture_output=True
+            )
+            
+            subprocess.run(
+                ['git', 'config', 'user.email', user_email],
+                cwd=str(self.repo_path),
+                check=False,
+                capture_output=True
+            )
         except subprocess.CalledProcessError as e:
             raise GitError(self.messages.t('git.clone_failed', error=e.stderr))
     

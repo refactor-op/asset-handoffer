@@ -87,6 +87,14 @@ class Config:
         return self.data.get('git', {}).get('commit_message', 'Update: {name}')
     
     @property
+    def git_user_name(self) -> str:
+        return self.data.get('git', {}).get('user', {}).get('name', 'Asset Handoffer')
+    
+    @property
+    def git_user_email(self) -> str:
+        return self.data.get('git', {}).get('user', {}).get('email', 'asset-handoffer@local')
+    
+    @property
     def asset_root(self) -> str:
         return self.data.get('asset_root', '')
     

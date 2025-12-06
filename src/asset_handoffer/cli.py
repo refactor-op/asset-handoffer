@@ -85,7 +85,9 @@ def setup(config_file: Path):
             print()
             print(m.t('setup.cloning'))
             try:
-                repo.clone(config.git_url, config.git_branch)
+                repo.clone(config.git_url, config.git_branch, 
+                          user_name=config.git_user_name,
+                          user_email=config.git_user_email)
                 print(m.t('setup.cloned', path=config.repo))
             except GitError as e:
                 print(str(e))

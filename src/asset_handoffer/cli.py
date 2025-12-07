@@ -41,9 +41,6 @@ def setup(config_file: Path):
         print(m.t('setup.workspace', path=config.workspace_root))
         print()
         
-        config.ensure_dirs()
-        print(m.t('setup.inbox_dir', path=config.inbox))
-        
         repo = GitRepo(config.repo, m, config.git_token)
         
         should_clone = True
@@ -57,6 +54,13 @@ def setup(config_file: Path):
                 should_clone = False
         
         if should_clone:
+            print(m.t('setup.verifying'))
+            if not repo.verify_remote(config.git_url, config.git_branch):
+                print(m.t('git.verify_failed'))
+                raise typer.Exit(1)
+            
+            config.ensure_dirs()
+            print(m.t('setup.inbox_dir', path=config.inbox))
             print()
             print(m.t('setup.cloning'))
             try:
@@ -66,6 +70,9 @@ def setup(config_file: Path):
             except GitError as e:
                 print(str(e))
                 raise typer.Exit(1)
+        else:
+            config.ensure_dirs()
+            print(m.t('setup.inbox_dir', path=config.inbox))
         
         print()
         print(SEPARATOR)

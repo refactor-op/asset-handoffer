@@ -2,7 +2,7 @@
 Asset Handoffer
 """
 
-__version__ = "0.10.0"
+__version__ = "0.10.2"
 __author__ = "Refactor"
 __email__ = "refactor.op@gmail.com"
 

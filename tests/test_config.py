@@ -1,5 +1,5 @@
 from pathlib import Path
-from asset_handoffer.core.config import Config
+from asset_handoffer.core import Config
 
 
 def test_create_and_load_config(tmp_path):
@@ -20,15 +20,15 @@ def test_create_and_load_config(tmp_path):
 def test_workspace_string_shorthand(tmp_path):
     config_file = tmp_path / "config.yaml"
     
-    yaml_content = r"""workspace: "./"
+    yaml_content = '''workspace: "./"
 git:
   repository: "https://github.com/test/test.git"
 asset_root: "Assets/"
 path_template: "{type}/{name}/"
 naming:
-  pattern: "^(?P<type>[^_]+)_(?P<name>[^_]+)\\.(?P<ext>\\w+)$"
+  pattern: "^(?P<type>[^_]+)_(?P<name>[^_]+)\\\\.(?P<ext>\\\\w+)$"
 language: "zh-CN"
-"""
+'''
     config_file.write_text(yaml_content)
     
     config = Config.load(config_file)

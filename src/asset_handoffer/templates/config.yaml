@@ -1,32 +1,51 @@
 workspace: "./"
 
 git:
-  repository: "https://github.com/your-org/your-project.git"
+  repository: "https://your-git-host.com/your-org/your-project.git"
   branch: "main"
   commit_message: "Update {type}: {name}"
-  # token: ""  # Optional: GitHub Personal Access Token (or use GITHUB_TOKEN env var)
+  # token: ""  # 可选：Git 访问令牌（或设置环境变量 GIT_TOKEN）
   # user:
   #   name: "Asset Handoffer"
   #   email: "asset-handoffer@local"
 
 asset_root: "Assets/GameRes/"
 
-# ==============================================================================
+# ==========================================================
 # 方式 1: 保留原始文件名
 # 输入: Character_Hero_Run.fbx
 # 输出: Assets/GameRes/Character/Hero/Character_Hero_Run.fbx
-# ------------------------------------------------------------------------------
+# ----------------------------------------------------------
 # path_template: "{type}/{category}/"
-# ------------------------------------------------------------------------------
+# ----------------------------------------------------------
 # 方式 2: 重命名文件
 # 输入: Character_Hero_Run.fbx
 # 输出: Assets/GameRes/Character/Hero/Run.fbx
-# ------------------------------------------------------------------------------
+# ----------------------------------------------------------
 path_template: "{type}/{category}/{name}.{ext}"
-# ==============================================================================
+# ==========================================================
 
 naming:
   pattern: "^(?P<type>[^_]+)_(?P<category>[^_]+)_(?P<name>[^_]+)(_(?P<variant>[^.]+))?\\.(?P<ext>\\w+)$"
   example: "Character_Hero_Run.fbx"
+
+# ==========================================================
+# 多层命名规则
+# 按顺序匹配
+# ----------------------------------------------------------
+# naming:
+#   rules:
+#     - pattern: "^(?P<type>[^_]+)_(?P<category>[^_]+)_(?P<name>[^_]+)_(?P<variant>[^.]+)\\.(?P<ext>\\w+)$"
+#       path_template: "{type}/{category}/{name}_{variant}.{ext}"
+#       example: "Character_Hero_Run_v2.fbx"
+#
+#     - pattern: "^(?P<type>[^_]+)_(?P<category>[^_]+)_(?P<name>[^.]+)\\.(?P<ext>\\w+)$"
+#       path_template: "{type}/{category}/{name}.{ext}"
+#       example: "Character_Hero_Run.fbx"
+#
+#     - pattern: "^(?P<type>[^_]+)_(?P<name>[^.]+)\\.(?P<ext>\\w+)$"
+#       path_template: "{type}/{name}.{ext}"
+#       example: "UI_Button.png"
+# ==========================================================
 
 language: "zh-CN"

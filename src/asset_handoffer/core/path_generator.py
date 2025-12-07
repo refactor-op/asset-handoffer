@@ -1,35 +1,32 @@
-"""路径生成器"""
-
 from pathlib import Path
-from ..parsers import ParsedFilename
-from ..exceptions import ProcessError
-from ..i18n import Messages
+from .protocols import ParsedResult
+from .exceptions import ProcessError
+from .i18n import Messages
 
 
 class PathGenerator:
-    """路径生成器"""
-    
-    def __init__(self, path_template: str, asset_root: str, messages: Messages = None):
-        self.path_template = path_template
+    def __init__(self, default_template: str, asset_root: str, messages: Messages = None):
+        self.default_template = default_template
         self.asset_root = asset_root
-        self.messages = messages or Messages('zh-CN')
+        self.messages = messages or Messages()
     
-    def generate(self, parsed: ParsedFilename, repo_base: Path) -> Path:
+    def generate(self, parsed: ParsedResult, repo_base: Path) -> Path:
+        template = parsed.path_template if parsed.path_template else self.default_template
+        
         try:
-            rel_path = self.path_template.format(**parsed.groups)
+            rel_path = template.format(**parsed.groups)
         except KeyError as e:
-            available = ', '.join(parsed.groups.keys())
-            raise ProcessError(
-                self.messages.t('process.template_undefined_field',
-                              field=str(e).strip("'"),
-                              available=available)
-            )
+            raise ProcessError(self.messages.t(
+                'process.template_undefined_field',
+                field=str(e).strip("'"),
+                available=', '.join(parsed.groups.keys())
+            ))
         
         full_path = repo_base / self.asset_root / rel_path
         
-        if not rel_path.endswith(('.', '/')):
-            full_path.parent.mkdir(parents=True, exist_ok=True)
-            return full_path
+        if rel_path.endswith(('.', '/')):
+            full_path.mkdir(parents=True, exist_ok=True)
+            return full_path / parsed.original_name
         
-        full_path.mkdir(parents=True, exist_ok=True)
-        return full_path / parsed.original_name
+        full_path.parent.mkdir(parents=True, exist_ok=True)
+        return full_path

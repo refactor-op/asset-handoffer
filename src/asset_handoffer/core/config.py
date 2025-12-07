@@ -1,16 +1,11 @@
-"""配置管理"""
-
 from pathlib import Path
 import yaml
 from typing import Any
-
-from ..exceptions import ConfigError
-from ..i18n import Messages
+from .exceptions import ConfigError
+from .i18n import Messages
 
 
 class Config:
-    """配置管理"""
-    
     def __init__(self, config_dict: dict, config_file: Path, messages: Messages = None):
         self.data = config_dict
         self.config_file = config_file
@@ -19,55 +14,47 @@ class Config:
         self._validate()
     
     def _resolve_paths(self):
-        workspace = self.data.get('workspace', {})
+        workspace = self.data.get('workspace', './')
         
-        if isinstance(workspace, str):
-            root = workspace
-            inbox_name = 'inbox'
-            repo_name = '.repo'
-            failed_name = 'failed'
-            logs_name = 'logs'
-        else:
+        if isinstance(workspace, dict):
             root = workspace.get('root', './')
             inbox_name = workspace.get('inbox', 'inbox')
             repo_name = workspace.get('repo', '.repo')
             failed_name = workspace.get('failed', 'failed')
-            logs_name = workspace.get('logs', 'logs')
-        
-        if not Path(root).is_absolute():
-            root = (self.config_file.parent / root).resolve()
         else:
-            root = Path(root)
+            root, inbox_name, repo_name, failed_name = workspace, 'inbox', '.repo', 'failed'
+        
+        root = Path(root) if Path(root).is_absolute() else (self.config_file.parent / root).resolve()
         
         self.workspace_root = root
         self.inbox = root / inbox_name
         self.repo = root / repo_name
         self.failed = root / failed_name
-        self.logs = root / logs_name
     
     def _validate(self):
-        required = ['git.repository', 'naming.pattern']
+        has_rules = self._get_nested('naming.rules')
+        has_pattern = self._get_nested('naming.pattern')
         
-        for field in required:
-            if not self._get_nested(field):
-                raise ConfigError(self.messages.t('config.missing_field', field=field))
+        if not has_rules and not has_pattern:
+            raise ConfigError(self.messages.t('config.missing_field', field='naming.rules 或 naming.pattern'))
+        
+        if not self._get_nested('git.repository'):
+            raise ConfigError(self.messages.t('config.missing_field', field='git.repository'))
         
         if 'asset_root' not in self.data:
             raise ConfigError(self.messages.t('config.missing_field', field='asset_root'))
         
-        if 'path_template' not in self.data:
+        if not has_rules and 'path_template' not in self.data:
             raise ConfigError(self.messages.t('config.missing_field', field='path_template'))
     
     def _get_nested(self, key_path: str) -> Any:
         keys = key_path.split('.')
         value = self.data
-        
         for key in keys:
             if isinstance(value, dict):
                 value = value.get(key)
             else:
                 return None
-        
         return value
     
     @property
@@ -103,24 +90,34 @@ class Config:
         return self.data.get('path_template', '')
     
     @property
-    def naming_pattern(self) -> str:
-        return self.data['naming']['pattern']
+    def naming_rules(self) -> list[dict]:
+        rules = self._get_nested('naming.rules')
+        if rules:
+            return rules
+        pattern = self._get_nested('naming.pattern')
+        if pattern:
+            return [{
+                'pattern': pattern,
+                'path_template': self.path_template,
+                'example': self._get_nested('naming.example') or ''
+            }]
+        return []
     
     @property
-    def naming_example(self) -> str:
-        return self.data['naming'].get('example', '')
+    def naming_examples(self) -> list[str]:
+        return [r.get('example', '') for r in self.naming_rules if r.get('example')]
     
     @property
     def language(self) -> str:
         return self.data.get('language', 'zh-CN')
     
     def ensure_dirs(self):
-        for d in [self.inbox, self.failed, self.logs]:
+        for d in [self.inbox, self.failed]:
             d.mkdir(parents=True, exist_ok=True)
     
     @staticmethod
     def load(config_file: Path) -> 'Config':
-        temp_messages = Messages('zh-CN')
+        temp_messages = Messages()
         
         if not config_file.exists():
             raise ConfigError(temp_messages.t('config.file_not_found', path=str(config_file)))
@@ -130,38 +127,24 @@ class Config:
         except yaml.YAMLError as e:
             raise ConfigError(temp_messages.t('config.invalid_yaml', error=str(e)))
         
-        messages = Messages(data.get('language', 'zh-CN'))
-        return Config(data, config_file, messages)
+        return Config(data, config_file, Messages(data.get('language', 'zh-CN')))
     
     @staticmethod
-    def create(
-        git_url: str,
-        asset_root: str = "Assets/GameRes/",
-        output_file: Path = None
-    ) -> Path:
-        from pathlib import Path
-        
+    def create(git_url: str, asset_root: str = "Assets/GameRes/", output_file: Path = None) -> Path:
         template_path = Path(__file__).parent.parent / "templates" / "config.yaml"
         
         if not template_path.exists():
             raise ConfigError(f"配置模板不存在: {template_path}")
         
-        with open(template_path, 'r', encoding='utf-8') as f:
-            template_content = f.read()
-        
-        content = template_content.replace(
-            'asset_root: "Assets/GameRes/"',
-            f'asset_root: "{asset_root}"'
+        content = template_path.read_text(encoding='utf-8').replace(
+            'asset_root: "Assets/GameRes/"', f'asset_root: "{asset_root}"'
         ).replace(
-            'repository: "https://github.com/your-org/your-project.git"',
-            f'repository: "{git_url}"'
+            'repository: "https://your-git-host.com/your-org/your-project.git"', f'repository: "{git_url}"'
         )
         
         if output_file is None:
             project_name = git_url.rstrip('/').split('/')[-1].replace('.git', '')
             output_file = Path(f"{project_name}.yaml")
         
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write(content)
-        
+        output_file.write_text(content, encoding='utf-8')
         return output_file

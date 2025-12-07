@@ -1,22 +1,18 @@
-"""Git仓库管理"""
-
 import subprocess
 import os
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse, urlunparse
 
-from ..exceptions import GitError
-from ..i18n import Messages
+from .exceptions import GitError
+from .i18n import Messages
 
 
 class GitRepo:
-    """Git仓库管理"""
-    
     def __init__(self, repo_path: Path, messages: Messages = None, token: str = None):
         self.repo_path = repo_path
-        self.messages = messages or Messages('zh-CN')
-        self.token = token or os.getenv('GITHUB_TOKEN')
+        self.messages = messages or Messages()
+        self.token = token or os.getenv('GIT_TOKEN') or os.getenv('GITHUB_TOKEN')
     
     def exists(self) -> bool:
         return (self.repo_path / ".git").exists()
@@ -29,14 +25,10 @@ class GitRepo:
         if parsed.scheme not in ('https', 'http'):
             return git_url
         
-        netloc_with_token = f"{self.token}@{parsed.netloc}"
         return urlunparse((
             parsed.scheme,
-            netloc_with_token,
-            parsed.path,
-            parsed.params,
-            parsed.query,
-            parsed.fragment
+            f"{self.token}@{parsed.netloc}",
+            parsed.path, parsed.params, parsed.query, parsed.fragment
         ))
     
     def clone(self, git_url: str, branch: str = "main", 
@@ -46,64 +38,32 @@ class GitRepo:
             raise GitError(self.messages.t('git.repo_exists', path=self.repo_path))
         
         url_with_token = self._inject_token(git_url)
-        
-        env = os.environ.copy()
-        if self.token:
-            env['GIT_TERMINAL_PROMPT'] = '0'
-            env['GCM_INTERACTIVE'] = 'never'
+        env = self._get_git_env()
         
         try:
             subprocess.run(
                 ['git', 'clone', '-b', branch, '--single-branch', 
                  '-c', 'credential.helper=', url_with_token, str(self.repo_path)],
-                check=True,
-                capture_output=True,
-                text=True,
-                env=env
+                check=True, capture_output=True, text=True, env=env
             )
             
             if self.token:
-                subprocess.run(
-                    ['git', 'config', 'credential.helper', ''],
-                    cwd=str(self.repo_path),
-                    check=True,
-                    capture_output=True
-                )
-                
-                subprocess.run(
-                    ['git', 'remote', 'set-url', 'origin', url_with_token],
-                    cwd=str(self.repo_path),
-                    check=True,
-                    capture_output=True
-                )
+                subprocess.run(['git', 'config', 'credential.helper', ''],
+                    cwd=str(self.repo_path), check=True, capture_output=True)
+                subprocess.run(['git', 'remote', 'set-url', 'origin', url_with_token],
+                    cwd=str(self.repo_path), check=True, capture_output=True)
             
-            subprocess.run(
-                ['git', 'config', 'user.name', user_name],
-                cwd=str(self.repo_path),
-                check=False,
-                capture_output=True
-            )
-            
-            subprocess.run(
-                ['git', 'config', 'user.email', user_email],
-                cwd=str(self.repo_path),
-                check=False,
-                capture_output=True
-            )
+            subprocess.run(['git', 'config', 'user.name', user_name],
+                cwd=str(self.repo_path), check=False, capture_output=True)
+            subprocess.run(['git', 'config', 'user.email', user_email],
+                cwd=str(self.repo_path), check=False, capture_output=True)
         except subprocess.CalledProcessError as e:
             raise GitError(self.messages.t('git.clone_failed', error=e.stderr))
     
     def pull(self):
-        env = self._get_git_env()
         try:
-            subprocess.run(
-                ['git', 'pull'],
-                cwd=str(self.repo_path),
-                check=True,
-                capture_output=True,
-                text=True,
-                env=env
-            )
+            subprocess.run(['git', 'pull'], cwd=str(self.repo_path),
+                check=True, capture_output=True, text=True, env=self._get_git_env())
         except subprocess.CalledProcessError as e:
             raise GitError(self.messages.t('git.pull_failed_new', error=e.stderr))
     
@@ -120,31 +80,14 @@ class GitRepo:
         try:
             self._run_git(['commit', '-m', message])
         except subprocess.CalledProcessError as e:
-            if "nothing to commit" in e.stderr:
-                return
-            raise GitError(self.messages.t('git.commit_failed', error=e.stderr))
+            if "nothing to commit" not in e.stderr:
+                raise GitError(self.messages.t('git.commit_failed', error=e.stderr))
     
     def push(self, branch: Optional[str] = None):
-        env = self._get_git_env()
         try:
-            if branch:
-                subprocess.run(
-                    ['git', 'push', 'origin', branch],
-                    cwd=str(self.repo_path),
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                    env=env
-                )
-            else:
-                subprocess.run(
-                    ['git', 'push'],
-                    cwd=str(self.repo_path),
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                    env=env
-                )
+            cmd = ['git', 'push'] + (['origin', branch] if branch else [])
+            subprocess.run(cmd, cwd=str(self.repo_path),
+                check=True, capture_output=True, text=True, env=self._get_git_env())
         except subprocess.CalledProcessError as e:
             raise GitError(self.messages.t('git.push_failed_new', error=e.stderr))
     
@@ -165,10 +108,5 @@ class GitRepo:
         return env
     
     def _run_git(self, args: list) -> subprocess.CompletedProcess:
-        return subprocess.run(
-            ['git'] + args,
-            cwd=str(self.repo_path),
-            check=True,
-            capture_output=True,
-            text=True
-        )
+        return subprocess.run(['git'] + args, cwd=str(self.repo_path),
+            check=True, capture_output=True, text=True)

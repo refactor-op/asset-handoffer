@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](pyproject.toml)
-[![Version](https://img.shields.io/badge/version-0.11.0-green.svg)](pyproject.toml)
+[![Version](https://img.shields.io/badge/version-0.11.1-green.svg)](pyproject.toml)
 
 放入即交付。
 

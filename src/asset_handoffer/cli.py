@@ -3,8 +3,13 @@ from pathlib import Path
 import shutil
 
 from .core import (
-    Config, ConfigError, ProcessError,
-    parse_filename, compute_target_path, process_file, process_batch
+    Config,
+    ConfigError,
+    ProcessError,
+    parse_filename,
+    compute_target_path,
+    process_file,
+    process_batch,
 )
 from .git import GitRepo, GitError
 from .i18n import Messages
@@ -24,12 +29,24 @@ def load_config(config_file: Path) -> Config:
 def init(
     git_url: str = typer.Option(..., prompt="Git仓库URL"),
     asset_root: str = typer.Option("Assets/GameRes/", prompt="资产根路径"),
+    branch: str = typer.Option("main", prompt="分支名"),
+    token: str = typer.Option("", prompt="Git Token (可选，直接回车跳过)"),
+    user_name: str = typer.Option("", prompt="提交用户名 (可选，直接回车跳过)"),
+    user_email: str = typer.Option("", prompt="提交邮箱 (可选，直接回车跳过)"),
     output: Path = typer.Option(None, "-o", "--output"),
 ):
     """生成配置文件"""
     m = Messages()
     try:
-        config_file = Config.create(git_url, asset_root, output)
+        config_file = Config.create(
+            git_url=git_url,
+            asset_root=asset_root,
+            output_file=output,
+            branch=branch,
+            token=token,
+            user_name=user_name,
+            user_email=user_email,
+        )
         typer.echo(m.t("init.created", path=config_file))
         typer.echo(m.t("init.next_steps"))
         typer.echo(m.t("init.next_setup", config=config_file))
@@ -67,8 +84,12 @@ def setup(
     typer.echo(m.t("setup.cloning"))
 
     try:
-        repo.clone(config.git_url, config.git_branch,
-                   config.git_user_name, config.git_user_email)
+        repo.clone(
+            config.git_url,
+            config.git_branch,
+            config.git_user_name,
+            config.git_user_email,
+        )
     except GitError as e:
         typer.echo(str(e), err=True)
         raise typer.Exit(1)
@@ -115,8 +136,9 @@ def process(
             invalid.append(f)
             continue
         try:
-            target = compute_target_path(parsed, config.path_template,
-                                         config.asset_root, config.repo)
+            target = compute_target_path(
+                parsed, config.path_template, config.asset_root, config.repo
+            )
         except ProcessError:
             invalid.append(f)
             continue
@@ -141,7 +163,11 @@ def process(
 
     if not yes:
         typer.echo()
-        prompt = m.t("process.override_confirm", count=len(overrides)) if overrides else m.t("process.confirm")
+        prompt = (
+            m.t("process.override_confirm", count=len(overrides))
+            if overrides
+            else m.t("process.confirm")
+        )
         if not typer.confirm(prompt):
             typer.echo(m.t("delete.cancelled"))
             return
@@ -151,7 +177,9 @@ def process(
     failed_count = len(invalid)
 
     for i, (f, target, _) in enumerate(valid, 1):
-        typer.echo(m.t("process.processing", current=i, total=len(valid), filename=f.name))
+        typer.echo(
+            m.t("process.processing", current=i, total=len(valid), filename=f.name)
+        )
         result = process_file(f, config, output=typer.echo)
         if result.success:
             success_count += 1
@@ -189,13 +217,20 @@ def status(config_file: Path):
         parsed = parse_filename(f.name, config.naming_rules)
         if parsed:
             try:
-                target = compute_target_path(parsed, config.path_template,
-                                             config.asset_root, config.repo)
-                typer.echo(f"  {f.name} ({size_mb:.1f}MB) -> {target.relative_to(config.repo)}")
+                target = compute_target_path(
+                    parsed, config.path_template, config.asset_root, config.repo
+                )
+                typer.echo(
+                    f"  {f.name} ({size_mb:.1f}MB) -> {target.relative_to(config.repo)}"
+                )
             except ProcessError:
-                typer.echo(f"  {f.name} ({size_mb:.1f}MB) -> {m.t('process.status_invalid')}")
+                typer.echo(
+                    f"  {f.name} ({size_mb:.1f}MB) -> {m.t('process.status_invalid')}"
+                )
         else:
-            typer.echo(f"  {f.name} ({size_mb:.1f}MB) -> {m.t('process.status_invalid')}")
+            typer.echo(
+                f"  {f.name} ({size_mb:.1f}MB) -> {m.t('process.status_invalid')}"
+            )
 
 
 @app.command()

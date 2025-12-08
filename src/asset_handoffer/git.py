@@ -27,19 +27,32 @@ class GitRepo:
         except subprocess.CalledProcessError:
             return False
 
-    def clone(self, git_url: str, branch: str = "main",
-              user_name: str = "Asset Handoffer",
-              user_email: str = "asset-handoffer@local"):
+    def clone(
+        self,
+        git_url: str,
+        branch: str = "main",
+        user_name: str = "Asset Handoffer",
+        user_email: str = "asset-handoffer@local",
+    ):
         if self.exists():
             raise GitError(self.messages.t("git.repo_exists", path=self.repo_path))
 
         url = self._inject_token(git_url)
 
         try:
-            self._run([
-                "clone", "-b", branch, "--single-branch",
-                "-c", "credential.helper=", url, str(self.repo_path)
-            ], cwd=None)
+            self._run(
+                [
+                    "clone",
+                    "-b",
+                    branch,
+                    "--single-branch",
+                    "-c",
+                    "credential.helper=",
+                    url,
+                    str(self.repo_path),
+                ],
+                cwd=None,
+            )
 
             if self.token:
                 self._run(["config", "credential.helper", ""])
@@ -94,13 +107,20 @@ class GitRepo:
         parsed = urlparse(git_url)
         if parsed.scheme not in ("https", "http"):
             return git_url
-        return urlunparse((
-            parsed.scheme,
-            f"{self.token}@{parsed.netloc}",
-            parsed.path, parsed.params, parsed.query, parsed.fragment
-        ))
+        return urlunparse(
+            (
+                parsed.scheme,
+                f"{self.token}@{parsed.netloc}",
+                parsed.path,
+                parsed.params,
+                parsed.query,
+                parsed.fragment,
+            )
+        )
 
-    def _run(self, args: list, cwd: Path | None = ..., check: bool = True) -> subprocess.CompletedProcess:
+    def _run(
+        self, args: list, cwd: Path | None = ..., check: bool = True
+    ) -> subprocess.CompletedProcess:
         work_dir = str(self.repo_path) if cwd is ... else (str(cwd) if cwd else None)
         env = os.environ.copy()
         if self.token:

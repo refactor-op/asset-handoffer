@@ -95,16 +95,23 @@ asset-handoffer init [OPTIONS]
 |------|------|
 | `--git-url` | Git 仓库 URL（交互式输入） |
 | `--asset-root` | 资产根路径，默认 `Assets/GameRes/` |
+| `--branch` | 分支名，默认 `main` |
+| `--token` | Git Token，用于私有仓库（可选） |
+| `--user-name` | 提交用户名（可选） |
+| `--user-email` | 提交邮箱（可选） |
 | `-o`, `--output` | 输出文件路径，默认为仓库名.yaml |
 
 示例：
 
 ```bash
-# 交互式
+# 交互式（逐一询问所有设置）
 asset-handoffer init
 
 # 指定输出路径
 asset-handoffer init -o config/my-project.yaml
+
+# 非交互式（命令行指定所有参数）
+asset-handoffer init --git-url https://github.com/team/game.git --asset-root Assets/ --branch main -o project.yaml
 ```
 
 ### setup

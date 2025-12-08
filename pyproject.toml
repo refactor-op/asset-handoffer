@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "asset-handoffer"
-version = "0.10.2"
+version = "0.11.0"
 description = "资产交付器"
 readme = "README.md"
 license = "MIT"
@@ -16,8 +16,8 @@ packages = [{ include = "asset_handoffer", from = "src" }]
 include = [
   { path = "src/asset_handoffer/templates/*.yaml", format = "wheel" },
   { path = "src/asset_handoffer/templates/*.yaml", format = "sdist" },
-  { path = "src/asset_handoffer/core/locales/*.yaml", format = "wheel" },
-  { path = "src/asset_handoffer/core/locales/*.yaml", format = "sdist" }
+  { path = "src/asset_handoffer/locales/*.yaml", format = "wheel" },
+  { path = "src/asset_handoffer/locales/*.yaml", format = "sdist" }
 ]
 
 [tool.poetry.dependencies]

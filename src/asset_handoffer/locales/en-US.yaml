@@ -52,6 +52,8 @@ process.status_invalid: "[invalid]"
 process.override_confirm: "{count} files will override remote, continue?"
 process.confirm: "Continue?"
 process.no_valid_files: "No valid files to process"
+process.pushing: "Pushing to remote repository..."
+process.push_failed: "Push failed: {error}"
 
 setup.title: "Workspace Setup"
 setup.repository: "Repository: {url}"

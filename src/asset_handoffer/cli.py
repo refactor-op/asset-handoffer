@@ -186,6 +186,16 @@ def process(
         else:
             failed_count += 1
 
+    # 统一 push 所有 commits
+    if success_count > 0:
+        typer.echo()
+        typer.echo(m.t("process.pushing"))
+        try:
+            repo.push()
+        except GitError as e:
+            typer.echo(m.t("process.push_failed", error=str(e)), err=True)
+            raise typer.Exit(1)
+
     typer.echo()
     typer.echo(m.t("process.summary_success", success=success_count))
     typer.echo(m.t("process.summary_failed", failed=failed_count))

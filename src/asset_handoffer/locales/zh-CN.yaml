@@ -52,6 +52,8 @@ process.status_invalid: "[不匹配]"
 process.override_confirm: "{count} 个文件将覆盖远程，继续?"
 process.confirm: "继续处理?"
 process.no_valid_files: "没有可处理的文件"
+process.pushing: "正在推送到远程仓库..."
+process.push_failed: "推送失败：{error}"
 
 setup.title: "工作区设置"
 setup.repository: "仓库：{url}"

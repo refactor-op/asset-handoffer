@@ -303,7 +303,6 @@ def process_file(
         repo.add(target_path)
         commit_msg = config.git_commit_template.format(**parsed["groups"])
         repo.commit(commit_msg)
-        repo.push()
     except GitError as e:
         if file_path.parent.exists():
             shutil.move(str(target_path), str(file_path))

@@ -160,13 +160,11 @@ class Config:
 
     def _generate_process_script(self):
         """在 inbox 中生成 handoff 脚本"""
-        import sys
-
         script_path = self.inbox / "handoff.bat"
         config_rel_path = self.config_file.relative_to(self.inbox.parent)
 
         # 检测 Python 路径：优先使用嵌入式 Python，否则使用系统 Python
-        script_content = f'''@echo off
+        script_content = f"""@echo off
 chcp 65001 > nul
 cd /d "%~dp0.."
 
@@ -179,7 +177,7 @@ if exist ".python\\python.exe" (
 
 "%PYTHON_EXE%" -m asset_handoffer process "{config_rel_path}"
 pause
-'''
+"""
         script_path.write_text(script_content, encoding="utf-8")
 
     @staticmethod

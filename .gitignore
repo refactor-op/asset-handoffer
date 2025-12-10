@@ -148,3 +148,6 @@ Thumbs.db
 !.asset-handoffer/inbox/.gitkeep
 *.tmp
 *.bak
+
+# Embedded Python environment (created by install script)
+.python/

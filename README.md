@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](pyproject.toml)
-[![Version](https://img.shields.io/badge/version-0.11.1-green.svg)](pyproject.toml)
+[![Version](https://img.shields.io/badge/version-0.12.0-green.svg)](pyproject.toml)
 
 放入即交付。
 
@@ -25,6 +25,12 @@ graph TD
 ```
 
 ## 安装
+
+### 美术人员（无需预装 Python）
+
+双击 `scripts\install.bat`，自动安装 Python 环境和依赖。
+
+### 开发者
 
 需要 Python 3.10+ 和 Git。
 
@@ -53,11 +59,17 @@ asset-handoffer setup project.yaml
 ```
 工作区/
 ├── inbox/      # 放入待处理的文件
+│   └── handoff.bat  # 双击处理文件（自动生成）
 ├── .repo/      # 隐藏的 Git 仓库
 └── failed/     # 处理失败的文件
 ```
 
 ### 美术：提交文件
+
+1. 将文件放入 `inbox/` 文件夹
+2. 双击 `inbox/handoff.bat`
+
+或使用命令行：
 
 ```bash
 asset-handoffer process project.yaml

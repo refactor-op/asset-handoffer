@@ -156,6 +156,31 @@ class Config:
     def ensure_dirs(self):
         self.inbox.mkdir(parents=True, exist_ok=True)
         self.failed.mkdir(parents=True, exist_ok=True)
+        self._generate_process_script()
+
+    def _generate_process_script(self):
+        """在 inbox 中生成 handoff 脚本"""
+        import sys
+
+        script_path = self.inbox / "handoff.bat"
+        config_rel_path = self.config_file.relative_to(self.inbox.parent)
+
+        # 检测 Python 路径：优先使用嵌入式 Python，否则使用系统 Python
+        script_content = f'''@echo off
+chcp 65001 > nul
+cd /d "%~dp0.."
+
+:: 检测嵌入式 Python
+if exist ".python\\python.exe" (
+    set "PYTHON_EXE=.python\\python.exe"
+) else (
+    set "PYTHON_EXE=python"
+)
+
+"%PYTHON_EXE%" -m asset_handoffer process "{config_rel_path}"
+pause
+'''
+        script_path.write_text(script_content, encoding="utf-8")
 
     @staticmethod
     def create(

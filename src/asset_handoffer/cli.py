@@ -96,7 +96,7 @@ def setup(
 
     typer.echo(m.t("setup.done_title"))
     typer.echo(m.t("setup.usage_put_files", inbox=config.inbox))
-    typer.echo(m.t("setup.usage_run_process", config=config_file))
+    typer.echo(m.t("setup.usage_run_handoff"))
 
 
 @app.command()
